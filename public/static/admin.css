@@ -1,0 +1,52 @@
+.alerta .animated{
+    border-radius: 50%;
+    animation: btnIconContact 2s infinite;
+    cursor: pointer;
+    background: transparent;
+}
+.alerta .desanimated{
+    border-radius: 50%;
+    animation: btnIconContactDenied 2s infinite;
+    cursor: pointer;
+    background: transparent;
+}
+.alerta .waranimated{
+    border-radius: 50%;
+    animation: btnIconContactwar 2s infinite;
+    cursor: pointer;
+    background: transparent;
+}
+@keyframes btnIconContact{
+    0% { box-shadow: 0 0 15px green; }
+    50% { box-shadow: none; }
+    100% { box-shadow: 0 0 15px green; }
+}
+@keyframes btnIconContactDenied{
+    0% { box-shadow: 0 0 15px rgb(128, 0, 0); }
+    50% { box-shadow: none; }
+    100% { box-shadow: 0 0 15px rgb(128, 0, 0); }
+}
+@keyframes btnIconContactwar{
+    0% { box-shadow: 0 0 15px rgb(128, 119, 0); }
+    50% { box-shadow: none; }
+    100% { box-shadow: 0 0 15px rgb(128, 119, 0); }
+}
+
+.social-link {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    border-radius: 50%;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+}
+
+.social-link:hover, .social-link:focus {
+    background: #ddd;
+    text-decoration: none;
+    color: #555;
+}
