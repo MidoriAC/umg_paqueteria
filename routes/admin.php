@@ -58,6 +58,12 @@ Route::prefix('/admin')->group(function(){
     Route::post('/user/{id}/permission',[UserController::class,'postUsersPermission'])->name('user_permission');
     Route::get('/user/{id}/banned',[UserController::class,'getUsersBanned'])->name('user_banned');
 
+    //Conductores
+    Route::post('/conductor',[UserController::class, 'postConductor'])->name('conductor_new');
+    Route::get('/conductor/{id}/edit', [UserController::class, 'getConductorEdit'])->name('conductor.edit');
+    Route::post('/conductor/{id}/edit', [UserController::class, 'postConductorEdit'])->name('conductor.edit.post');
+    Route::get('/conductor/{id}/suspend', [UserController::class, 'getConductorSuspend'])->name('conductor.suspend');
+    Route::get('/conductor/{id}/activate', [UserController::class, 'getConductorActivate'])->name('conductor.activate');
 
     Route::get('/account/edit',[UserController::class,'getAccountEdit'])->name('user_account');
     Route::post('/account/edit/password',[UserController::class,'postAccountEditPassword'])->name('user_account');

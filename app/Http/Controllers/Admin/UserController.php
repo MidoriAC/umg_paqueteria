@@ -15,16 +15,21 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
-        $this->middleware('isadmin');
-        $this->middleware('user.status');
-        $this->middleware('user.permissions'); 
+        // $this->middleware('auth');
+        // $this->middleware('isadmin');
+        // $this->middleware('user.status');
+        // $this->middleware('user.permissions'); 
        
     }
     public function getUsers(){
-        $users = User::orderBy('id','Desc')->get();
-        $data = ['users' => $users];
-        return view('admin.users.home',$data);
+        $users = User::orderBy('id','Desc')->where('id_sucursal', 1)->get();
+        $usuarios = User::where('id_sucursal', Auth::user()->id_sucursal)->get();
+        $conductores = DB::table('conductor')
+        ->where('id_sucursal', Auth::user()->id_sucursal)
+        ->get();
+
+        $data = ['users' => $users, 'usuarios' => $usuarios, 'conductores' => $conductores];
+        return view('admin.users.home', $data);
     }
     public function postUsers(Request $request){
         $rules = [
@@ -178,5 +183,121 @@ class UserController extends Controller
                 return back()->with('message','Sus datos se actualizaron con éxito')->with('typealert','success');
             endif;
         endif;
+    }
+
+
+    //*Lógica para almacenar conductores:
+
+    public function postConductor(Request $request) {
+        $rules = [
+            'nombre' => 'required',
+            'apellido' => 'required',
+            'telefono' => 'required',
+            'licencia' => 'required',
+            'foto_dpi' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'foto_licencia' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'id_usuario_app' => 'required|exists:users,id',
+        ];
+    
+        $message = [
+            'nombre.required' => 'El nombre es requerido.',
+            'apellido.required' => 'El apellido es requerido.',
+            'telefono.required' => 'El número de teléfono es requerido.',
+            'licencia.required' => 'La licencia es requerida.',
+            'foto_dpi.required' => 'La foto DPI es requerida.',
+            'foto_licencia.required' => 'La foto de licencia es requerida.',
+            'id_usuario_app.required' => 'El usuario asignado en app es requerido.',
+            'id_usuario_app.exists' => 'El usuario seleccionado no existe.',
+        ];
+    
+        $validator = Validator::make($request->all(), $rules, $message);
+    
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->with('message', 'Se ha producido un error:')->with('typealert', 'danger');
+        } else {
+            // Almacenar las imágenes
+            $fotoDpiPath = $request->file('foto_dpi')->store('public/conductores/fotos_dpi');
+            $fotoLicenciaPath = $request->file('foto_licencia')->store('public/conductores/fotos_licencia');
+    
+            // Insertar los datos en la tabla conductor
+            DB::table('conductor')->insert([
+                'nombre' => e($request->input('nombre')),
+                'apellido' => e($request->input('apellido')),
+                'telefono' => e($request->input('telefono')),
+                'licencia' => e($request->input('licencia')),
+                'dpi' => e($request->input('dpi')),
+                'foto_dpi' => $fotoDpiPath,
+                'foto_licencia' => $fotoLicenciaPath,
+                'id_usuario_app' => $request->input('id_usuario_app'),
+                'id_sucursal' => Auth::user()->id_sucursal,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'estado' => 1,
+            ]);
+    
+            return back()->with('message', 'El conductor se ha registrado con éxito')->with('typealert', 'success');
+        }
+    }
+
+    public function getConductorEdit($id) {
+        $conductor = DB::table('conductor')->where('id', $id)->first();
+        $data = ['conductor' => $conductor];
+        return view('admin.users.edit-conductor', $data);
+    }
+    
+    public function postConductorEdit(Request $request, $id) {
+        $rules = [
+            'nombre' => 'required',
+            'apellido' => 'required',
+            'telefono' => 'required',
+            'licencia' => 'required',
+            'dpi' => 'required',
+            'foto_dpi' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'foto_licencia' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ];
+    
+        $message = [
+            'nombre.required' => 'El nombre es requerido.',
+            'apellido.required' => 'El apellido es requerido.',
+            'telefono.required' => 'El número de teléfono es requerido.',
+            'licencia.required' => 'La licencia es requerida.',
+            'dpi.required' => 'El DPI es requerido.',
+            'foto_dpi.image' => 'La foto DPI debe ser una imagen.',
+        'foto_licencia.image' => 'La foto de licencia debe ser una imagen.',
+        'foto_dpi.mimes' => 'La foto DPI debe ser un archivo de tipo: jpeg, png, jpg, gif.',
+        'foto_licencia.mimes' => 'La foto de licencia debe ser un archivo de tipo: jpeg, png, jpg, gif.',
+        'foto_dpi.max' => 'La foto DPI no debe exceder los 2MB.',
+        'foto_licencia.max' => 'La foto de licencia no debe exceder los 2MB.',
+        ];
+    
+        $validator = Validator::make($request->all(), $rules, $message);
+    
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->with('message', 'Se ha producido un error:')->with('typealert', 'danger');
+        } else {
+            $conductor = DB::table('conductor')->where('id', $id)->first();
+    
+            if ($request->hasFile('foto_dpi')) {
+                $fotoDpiPath = $request->file('foto_dpi')->store('public/conductores/fotos_dpi');
+                DB::table('conductor')->where('id', $id)->update(['foto_dpi' => $fotoDpiPath]);
+            }
+    
+            if ($request->hasFile('foto_licencia')) {
+                $fotoLicenciaPath = $request->file('foto_licencia')->store('public/conductores/fotos_licencia');
+                DB::table('conductor')->where('id', $id)->update(['foto_licencia' => $fotoLicenciaPath]);
+            }
+    
+            return back()->with('message', 'Las fotos se han actualizado con éxito')->with('typealert', 'success');
+        }
+    }
+    
+    public function getConductorSuspend($id) {
+        DB::table('conductor')->where('id', $id)->update(['estado' => 0]);
+        return back()->with('message', 'El conductor ha sido suspendido con éxito')->with('typealert', 'warning');
+    }
+    
+    public function getConductorActivate($id) {
+        DB::table('conductor')->where('id', $id)->update(['estado' => 1]);
+        return back()->with('message', 'El conductor ha sido activado con éxito')->with('typealert', 'success');
     }
 }

@@ -114,7 +114,7 @@ class SucursalesController extends Controller
         else:
             $sucursal = Sucursales::findOrFail($id);
             $sucursal-> departamento_id = e($request->input('departamento_id'));
-            $sucursal-> municicipio_id = e($request->input('municipio_id'));
+            $sucursal-> municipio_id = e($request->input('municipio_id'));
             $sucursal-> sucursal = e($request->input('sucursal'));
             $sucursal-> telefono = e($request->input('telefono'));
             $sucursal-> hora_apertura = e($request->input('hora_apertura'));
